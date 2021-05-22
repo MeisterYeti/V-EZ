@@ -25,6 +25,7 @@ EXPORTS
     vezSwapchainSetVSync
     vezQueueSubmit
     vezQueuePresent
+    vezQueueWaitIdle
     vezDestroyFence
     vezGetFenceStatus
     vezWaitForFences
