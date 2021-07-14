@@ -75,6 +75,8 @@ namespace vez
         DRAW_INDEXED,
         DRAW_INDIRECT,
         DRAW_INDEXED_INDIRECT,
+        DRAW_INDIRECT_COUNT,
+        DRAW_INDEXED_INDIRECT_COUNT,
         DISPATCH,
         DISPATCH_INDIRECT,
         COPY_BUFFER,
@@ -93,6 +95,13 @@ namespace vez
         DEBUG_MARKER_BEGIN,
         DEBUG_MARKER_END,
         DEBUG_MARKER_INSERT,
+        BEGIN_CONDITIONAL_RENDERING,
+        END_CONDITIONAL_RENDERING,
+        BEGIN_QUERY,
+        END_QUERY,
+        RESET_QUERYPOOL,
+        COPY_QUERYPOOL_RESULTS,
+        WRITE_TIMESTAMP,
         COMMAND_ID_COUNT,
     } CommandID;
 
@@ -205,6 +214,8 @@ namespace vez
         void CmdDrawIndexed(uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, int32_t vertexOffset, uint32_t firstInstance);
         void CmdDrawIndirect(Buffer* pBuffer, VkDeviceSize offset, uint32_t drawCount, uint32_t stride);
         void CmdDrawIndexedIndirect(Buffer* pBuffer, VkDeviceSize offset, uint32_t drawCount, uint32_t stride);
+        void CmdDrawIndirectCount(Buffer* pBuffer, VkDeviceSize offset, Buffer* pCountBuffer, VkDeviceSize countOffset, uint32_t maxDrawCount, uint32_t stride);
+        void CmdDrawIndexedIndirectCount(Buffer* pBuffer, VkDeviceSize offset, Buffer* pCountBuffer, VkDeviceSize countOffset, uint32_t maxDrawCount, uint32_t stride);
         void CmdDispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ);
         void CmdDispatchIndirect(Buffer* pBuffer, VkDeviceSize offset);
         void CmdCopyBuffer(Buffer* pSrcBuffer, Buffer* pDstBuffer, uint32_t regionCount, const VezBufferCopy* pRegions);
@@ -223,7 +234,13 @@ namespace vez
         void CmdDebugMarkerBegin(const char* _szMarker, const float* _pColor);
         void CmdDebugMarkerEnd();
         void CmdDebugMarkerInsert(const char* _szMarker, const float* _pColor);
-
+        void CmdBeginConditionalRendering(Buffer* buffer, VkDeviceSize offset, VkConditionalRenderingFlagsEXT flags);
+        void CmdEndConditionalRendering();
+        void CmdBeginQuery(VkQueryPool queryPool, uint32_t query, VkQueryControlFlags flags);
+        void CmdEndQuery(VkQueryPool queryPool, uint32_t query);
+        void CmdResetQueryPool(VkQueryPool queryPool, uint32_t firstQuery, uint32_t queryCount);
+        void CmdCopyQueryPoolResults(VkQueryPool queryPool, uint32_t firstQuery, uint32_t queryCount, Buffer* buffer, VkDeviceSize dstOffset, VkDeviceSize stride, VkQueryControlFlags flags);
+        void CmdWriteTimestamp(VkPipelineStageFlagBits pipelineStage, VkQueryPool queryPool, uint32_t query);
     private:
         void BindDescriptorSet();
         void BindPipeline();

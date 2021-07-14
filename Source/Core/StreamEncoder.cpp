@@ -561,6 +561,40 @@ namespace vez
         m_stream << DRAW_INDEXED_INDIRECT << pBuffer << offset << drawCount << stride;
     }
 
+    void StreamEncoder::CmdDrawIndirectCount(Buffer* pBuffer, VkDeviceSize offset, Buffer* pCountBuffer, VkDeviceSize countOffset, uint32_t maxDrawCount, uint32_t stride)
+    {
+        // Add buffer access to PipelineBarriers.
+        auto size = reinterpret_cast<Buffer*>(pBuffer)->GetCreateInfo().size;
+        m_pipelineBarriers.BufferAccess(m_stream.TellP(), pBuffer, offset, size - offset, VK_ACCESS_INDIRECT_COMMAND_READ_BIT, VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT);
+        m_pipelineBarriers.BufferAccess(m_stream.TellP(), pCountBuffer, countOffset, 4, VK_ACCESS_INDIRECT_COMMAND_READ_BIT, VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT);
+
+        // Bind a new pipeline if any graphics state has changed.
+        BindPipeline();
+
+        // Create any required pipeline barriers and descriptor sets.
+        BindDescriptorSet();
+
+        // Encode the command to the memory stream.
+        m_stream << DRAW_INDIRECT_COUNT << pBuffer << offset << pCountBuffer << countOffset << maxDrawCount << stride;
+    }
+
+    void StreamEncoder::CmdDrawIndexedIndirectCount(Buffer* pBuffer, VkDeviceSize offset, Buffer* pCountBuffer, VkDeviceSize countOffset, uint32_t maxDrawCount, uint32_t stride)
+    {
+        // Add buffer access to PipelineBarriers.
+        auto size = reinterpret_cast<Buffer*>(pBuffer)->GetCreateInfo().size;
+        m_pipelineBarriers.BufferAccess(m_stream.TellP(), pBuffer, offset, size - offset, VK_ACCESS_INDIRECT_COMMAND_READ_BIT, VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT);
+        m_pipelineBarriers.BufferAccess(m_stream.TellP(), pCountBuffer, countOffset, 4, VK_ACCESS_INDIRECT_COMMAND_READ_BIT, VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT);
+
+        // Bind a new pipeline if any graphics state has changed.
+        BindPipeline();
+
+        // Create any required pipeline barriers and descriptor sets.
+        BindDescriptorSet();
+
+        // Encode the command to the memory stream.
+        m_stream << DRAW_INDEXED_INDIRECT_COUNT << pBuffer << offset << pCountBuffer << countOffset << maxDrawCount << stride;
+    }
+
     void StreamEncoder::CmdDispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
     {
         // Bind a new pipeline if any graphics state has changed.
@@ -829,6 +863,55 @@ namespace vez
         m_stream.Write(_szMarker, len);
         m_stream.Write(_pColor, 4 * sizeof(float));
     }
+    
+    void StreamEncoder::CmdBeginConditionalRendering(Buffer* buffer, VkDeviceSize offset, VkConditionalRenderingFlagsEXT flags)
+    {
+        // Add buffer access to PipelineBarriers.
+        m_pipelineBarriers.BufferAccess(m_stream.TellP(), buffer, offset, 4, VK_ACCESS_CONDITIONAL_RENDERING_READ_BIT_EXT, VK_PIPELINE_STAGE_CONDITIONAL_RENDERING_BIT_EXT);
+
+        // Encode the command to the memory stream.
+        m_stream << BEGIN_CONDITIONAL_RENDERING << buffer << offset << flags;
+    }
+
+    void StreamEncoder::CmdEndConditionalRendering()
+    {
+        // Encode the command to the memory stream.
+        m_stream << END_CONDITIONAL_RENDERING;
+    }
+
+    void StreamEncoder::CmdBeginQuery(VkQueryPool queryPool, uint32_t query, VkQueryControlFlags flags)
+    {
+        // Encode the command to the memory stream.
+        m_stream << BEGIN_QUERY << queryPool << query << flags;
+    }
+
+    void StreamEncoder::CmdEndQuery(VkQueryPool queryPool, uint32_t query)
+    {
+        // Encode the command to the memory stream.
+        m_stream << END_QUERY << queryPool << query;
+    }
+
+    void StreamEncoder::CmdResetQueryPool(VkQueryPool queryPool, uint32_t firstQuery, uint32_t queryCount)
+    {
+        // Encode the command to the memory stream.
+        m_stream << RESET_QUERYPOOL << queryPool << firstQuery << queryCount;
+    }
+
+    void StreamEncoder::CmdCopyQueryPoolResults(VkQueryPool queryPool, uint32_t firstQuery, uint32_t queryCount, Buffer* buffer, VkDeviceSize dstOffset, VkDeviceSize stride, VkQueryControlFlags flags)
+    {
+        // Add buffer access to PipelineBarriers.
+        m_pipelineBarriers.BufferAccess(m_stream.TellP(), buffer, dstOffset, stride * queryCount, VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
+
+        // Encode the command to the memory stream.
+        m_stream << COPY_QUERYPOOL_RESULTS << queryPool << firstQuery << queryCount << buffer << dstOffset << stride << flags;
+    }
+
+    void StreamEncoder::CmdWriteTimestamp(VkPipelineStageFlagBits pipelineStage, VkQueryPool queryPool, uint32_t query)
+    {
+        // Encode the command to the memory stream.
+        m_stream << WRITE_TIMESTAMP << pipelineStage << queryPool << query;
+    }
+
     void StreamEncoder::BindDescriptorSet()
     {
         // A valid pipeline must be bound before descriptor sets can be updated.

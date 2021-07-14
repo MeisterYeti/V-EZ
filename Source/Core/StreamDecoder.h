@@ -70,6 +70,8 @@ namespace vez
         void CmdDrawIndexed(CommandBuffer& commandBuffer, MemoryStream& stream);
         void CmdDrawIndirect(CommandBuffer& commandBuffer, MemoryStream& stream);
         void CmdDrawIndexedIndirect(CommandBuffer& commandBuffer, MemoryStream& stream);
+        void CmdDrawIndirectCount(CommandBuffer& commandBuffer, MemoryStream& stream);
+        void CmdDrawIndexedIndirectCount(CommandBuffer& commandBuffer, MemoryStream& stream);
         void CmdDispatch(CommandBuffer& commandBuffer, MemoryStream& stream);
         void CmdDispatchIndirect(CommandBuffer& commandBuffer, MemoryStream& stream);
         void CmdCopyBuffer(CommandBuffer& commandBuffer, MemoryStream& stream);
@@ -88,6 +90,13 @@ namespace vez
         void CmdDebugMarkerBegin(CommandBuffer& commandBuffer, MemoryStream& stream);
         void CmdDebugMarkerEnd(CommandBuffer& commandBuffer, MemoryStream& stream);
         void CmdDebugMarkerInsert(CommandBuffer& commandBuffer, MemoryStream& stream);
+        void CmdBeginConditionalRendering(CommandBuffer& commandBuffer, MemoryStream& stream);
+        void CmdEndConditionalRendering(CommandBuffer& commandBuffer, MemoryStream& stream);
+        void CmdBeginQuery(CommandBuffer& commandBuffer, MemoryStream& stream);
+        void CmdEndQuery(CommandBuffer& commandBuffer, MemoryStream& stream);
+        void CmdResetQueryPool(CommandBuffer& commandBuffer, MemoryStream& stream);
+        void CmdCopyQueryPoolResults(CommandBuffer& commandBuffer, MemoryStream& stream);
+        void CmdWriteTimestamp(CommandBuffer& commandBuffer, MemoryStream& stream);
 
         typedef void(StreamDecoder::*EntryPoint)(CommandBuffer&, MemoryStream&);
         std::vector<EntryPoint> m_entryPoints;

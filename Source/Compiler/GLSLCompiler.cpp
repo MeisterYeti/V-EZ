@@ -199,7 +199,10 @@ namespace vez
         {
             std::string warningsErrors;
             spv::SpvBuildLogger logger;
-            glslang::GlslangToSpv(*program.getIntermediate(compUnit.stage), spirv, &logger);
+            glslang::SpvOptions spvOptions;
+            spvOptions.disableOptimizer = false;
+            spvOptions.optimizeSize = true;
+            glslang::GlslangToSpv(*program.getIntermediate(compUnit.stage), spirv, &logger, &spvOptions);
             infoLog += logger.getAllMessages() + "\n";
         }
 

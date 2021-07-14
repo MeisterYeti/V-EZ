@@ -95,6 +95,8 @@ EXPORTS
     vezCmdDrawIndexed
     vezCmdDrawIndirect
     vezCmdDrawIndexedIndirect
+    vezCmdDrawIndirectCount
+    vezCmdDrawIndexedIndirectCount
     vezCmdDispatch
     vezCmdDispatchIndirect
     vezCmdCopyBuffer
@@ -108,6 +110,13 @@ EXPORTS
     vezCmdClearDepthStencilImage
     vezCmdClearAttachments
     vezCmdResolveImage
+    vezCmdBeginConditionalRendering
+    vezCmdEndConditionalRendering
+    vezCmdBeginQuery
+    vezCmdEndQuery
+    vezCmdResetQueryPool
+    vezCmdCopyQueryPoolResults
+    vezCmdWriteTimestamp
     vezImportVkImage
     vezGetImageLayout
     vezTransitionImageLayout

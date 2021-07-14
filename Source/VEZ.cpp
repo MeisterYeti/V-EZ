@@ -46,6 +46,7 @@ namespace vez
     extern PFN_vkDebugMarkerSetObjectNameEXT pfnDebugMarkerSetObjectName;
 
     void SetupDebugMarkers(VkDevice device);
+    void SetupConditionalRendering(VkDevice device);
 }
 
 // Per thread command buffer currently being recorded.
@@ -206,11 +207,16 @@ VkResult VKAPI_CALL vezCreateDevice(VkPhysicalDevice physicalDevice, const VezDe
             vez::ObjectLookup::AddObjectImpl(queue->GetHandle(), queue);
 
     for (uint32_t i = 0; i < pCreateInfo->enabledExtensionCount; ++i)
+    {
         if (strcmp(pCreateInfo->ppEnabledExtensionNames[i], VK_EXT_DEBUG_MARKER_EXTENSION_NAME) == 0)
         {
             vez::SetupDebugMarkers(*pDevice);
-            break;
         }
+        else if (strcmp(pCreateInfo->ppEnabledExtensionNames[i], VK_EXT_CONDITIONAL_RENDERING_EXTENSION_NAME) == 0)
+        {
+            vez::SetupConditionalRendering(*pDevice);
+        }
+    }
 
     // Return success.
     return VK_SUCCESS;
@@ -1141,7 +1147,7 @@ void VKAPI_CALL vezCmdDrawIndirect(VkBuffer buffer, VkDeviceSize offset, uint32_
     // Lookup Buffer object handle.
     auto bufferImpl = vez::ObjectLookup::GetObjectImpl(buffer);
     if (!bufferImpl)
-        return;
+        bufferImpl = ImportVkBuffer(s_pActiveCommandBuffer->GetPool()->GetDevice(), buffer);
 
     // Call draw indirect.
     s_pActiveCommandBuffer->CmdDrawIndirect(bufferImpl, offset, drawCount, stride);
@@ -1158,6 +1164,38 @@ void VKAPI_CALL vezCmdDrawIndexedIndirect(VkBuffer buffer, VkDeviceSize offset, 
 
     // Call draw indexed indirect.
     s_pActiveCommandBuffer->CmdDrawIndexedIndirect(bufferImpl, offset, drawCount, stride);
+}
+
+void VKAPI_CALL vezCmdDrawIndirectCount(VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countOffset, uint32_t maxDrawCount, uint32_t stride)
+{
+    // Lookup Buffer object handle.
+    auto bufferImpl = vez::ObjectLookup::GetObjectImpl(buffer);
+    if (!bufferImpl)
+        bufferImpl = ImportVkBuffer(s_pActiveCommandBuffer->GetPool()->GetDevice(), buffer);
+
+    auto countBufferImpl = vez::ObjectLookup::GetObjectImpl(countBuffer);
+    if (!countBufferImpl)
+        countBufferImpl = ImportVkBuffer(s_pActiveCommandBuffer->GetPool()->GetDevice(), countBuffer);
+
+    // Call draw indirect.
+    s_pActiveCommandBuffer->CmdDrawIndirectCount(bufferImpl, offset, countBufferImpl, countOffset, maxDrawCount, stride);
+}
+
+void VKAPI_CALL vezCmdDrawIndexedIndirectCount(VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countOffset, uint32_t maxDrawCount, uint32_t stride)
+{
+    // Lookup Buffer object handle.
+    auto bufferImpl = vez::ObjectLookup::GetObjectImpl(buffer);
+    
+    // If Buffer class object was not found, assume the VkBuffer handle comes from native Vulkan.
+    // Create a new proxy Buffer class object and add it to the object lookup.
+    if (!bufferImpl) bufferImpl = ImportVkBuffer(s_pActiveCommandBuffer->GetPool()->GetDevice(), buffer);
+
+    auto countBufferImpl = vez::ObjectLookup::GetObjectImpl(countBuffer);
+    if (!countBufferImpl)
+        countBufferImpl = ImportVkBuffer(s_pActiveCommandBuffer->GetPool()->GetDevice(), countBuffer);
+
+    // Call draw indexed indirect.
+    s_pActiveCommandBuffer->CmdDrawIndexedIndirectCount(bufferImpl, offset, countBufferImpl, countOffset, maxDrawCount, stride);
 }
 
 void VKAPI_CALL vezCmdDispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
@@ -1377,4 +1415,49 @@ void VKAPI_CALL vezSetObjectTag(VkDevice device, uint64_t object, VkDebugReportO
     TagInfo.tagName = name;
     TagInfo.pNext = nullptr;
     (*vez::pfnDebugMarkerSetObjectTag)(device, &TagInfo);
+}
+
+void VKAPI_CALL vezCmdBeginConditionalRendering(VkBuffer buffer, VkDeviceSize offset, VkConditionalRenderingFlagsEXT flags)
+{
+    // Lookup Buffer object handle.
+    auto bufferImpl = vez::ObjectLookup::GetObjectImpl(buffer);
+    if (!bufferImpl)
+        return;
+
+    s_pActiveCommandBuffer->CmdBeginConditionalRendering(bufferImpl, offset, flags);
+}
+
+void VKAPI_CALL vezCmdEndConditionalRendering()
+{
+    s_pActiveCommandBuffer->CmdEndConditionalRendering();
+}
+
+void VKAPI_CALL vezCmdBeginQuery(VkQueryPool queryPool, uint32_t query, VkQueryControlFlags flags)
+{
+    s_pActiveCommandBuffer->CmdBeginQuery(queryPool, query, flags);
+}
+
+void VKAPI_CALL vezCmdEndQuery(VkQueryPool queryPool, uint32_t query)
+{
+    s_pActiveCommandBuffer->CmdEndQuery(queryPool, query);
+}
+
+void VKAPI_CALL vezCmdResetQueryPool(VkQueryPool queryPool, uint32_t firstQuery, uint32_t queryCount)
+{
+    s_pActiveCommandBuffer->CmdResetQueryPool(queryPool, firstQuery, queryCount);
+}
+
+void VKAPI_CALL vezCmdCopyQueryPoolResults(VkQueryPool queryPool, uint32_t firstQuery, uint32_t queryCount, VkBuffer dstBuffer, VkDeviceSize dstOffset, VkDeviceSize stride, VkQueryControlFlags flags)
+{
+    // Lookup Buffer object handle.
+    auto bufferImpl = vez::ObjectLookup::GetObjectImpl(dstBuffer);
+    if (!bufferImpl)
+        return;
+
+    s_pActiveCommandBuffer->CmdCopyQueryPoolResults(queryPool, firstQuery, queryCount, bufferImpl, dstOffset, stride, flags);
+}
+
+void VKAPI_CALL vezCmdWriteTimestamp(VkPipelineStageFlagBits pipelineStage, VkQueryPool queryPool, uint32_t query)
+{
+    s_pActiveCommandBuffer->CmdWriteTimestamp(pipelineStage, queryPool, query);
 }

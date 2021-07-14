@@ -609,6 +609,8 @@ VKAPI_ATTR void VKAPI_CALL vezCmdDraw(uint32_t vertexCount, uint32_t instanceCou
 VKAPI_ATTR void VKAPI_CALL vezCmdDrawIndexed(uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, int32_t vertexOffset, uint32_t firstInstance);
 VKAPI_ATTR void VKAPI_CALL vezCmdDrawIndirect(VkBuffer buffer, VkDeviceSize offset, uint32_t drawCount, uint32_t stride);
 VKAPI_ATTR void VKAPI_CALL vezCmdDrawIndexedIndirect(VkBuffer buffer, VkDeviceSize offset, uint32_t drawCount, uint32_t stride);
+VKAPI_ATTR void VKAPI_CALL vezCmdDrawIndirectCount(VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countOffset, uint32_t maxDrawCount, uint32_t stride);
+VKAPI_ATTR void VKAPI_CALL vezCmdDrawIndexedIndirectCount(VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countOffset, uint32_t maxDrawCount, uint32_t stride);
 VKAPI_ATTR void VKAPI_CALL vezCmdDispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ);
 VKAPI_ATTR void VKAPI_CALL vezCmdDispatchIndirect(VkBuffer buffer, VkDeviceSize offset);
 VKAPI_ATTR void VKAPI_CALL vezCmdCopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, uint32_t regionCount, const VezBufferCopy* pRegions);
@@ -624,6 +626,13 @@ VKAPI_ATTR void VKAPI_CALL vezCmdClearAttachments(uint32_t attachmentCount, cons
 VKAPI_ATTR void VKAPI_CALL vezCmdResolveImage(VkImage srcImage, VkImage dstImage, uint32_t regionCount, const VezImageResolve* pRegions);
 VKAPI_ATTR void VKAPI_CALL vezCmdSetEvent(VkEvent event, VkPipelineStageFlags stageMask);
 VKAPI_ATTR void VKAPI_CALL vezCmdResetEvent(VkEvent event, VkPipelineStageFlags stageMask);
+VKAPI_ATTR void VKAPI_CALL vezCmdBeginConditionalRendering(VkBuffer buffer, VkDeviceSize offset, VkConditionalRenderingFlagsEXT flags);
+VKAPI_ATTR void VKAPI_CALL vezCmdEndConditionalRendering();
+VKAPI_ATTR void VKAPI_CALL vezCmdBeginQuery(VkQueryPool queryPool, uint32_t query, VkQueryControlFlags flags);
+VKAPI_ATTR void VKAPI_CALL vezCmdEndQuery(VkQueryPool queryPool, uint32_t query);
+VKAPI_ATTR void VKAPI_CALL vezCmdResetQueryPool(VkQueryPool queryPool, uint32_t firstQuery, uint32_t queryCount);
+VKAPI_ATTR void VKAPI_CALL vezCmdCopyQueryPoolResults(VkQueryPool queryPool, uint32_t firstQuery, uint32_t queryCount, VkBuffer dstBuffer, VkDeviceSize dstOffset, VkDeviceSize stride, VkQueryControlFlags flags);
+VKAPI_ATTR void VKAPI_CALL vezCmdWriteTimestamp(VkPipelineStageFlagBits pipelineStage, VkQueryPool queryPool, uint32_t query);
 
 #ifdef __cplusplus
 }

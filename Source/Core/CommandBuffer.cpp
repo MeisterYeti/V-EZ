@@ -266,6 +266,16 @@ namespace vez
         m_streamEncoder.CmdDrawIndexedIndirect(pBuffer, offset, drawCount, stride);
     }
 
+    void CommandBuffer::CmdDrawIndirectCount(Buffer* pBuffer, VkDeviceSize offset, Buffer* pCountBuffer, VkDeviceSize countOffset, uint32_t maxDrawCount, uint32_t stride)
+    {
+        m_streamEncoder.CmdDrawIndirectCount(pBuffer, offset, pCountBuffer, countOffset, maxDrawCount, stride);
+    }
+
+    void CommandBuffer::CmdDrawIndexedIndirectCount(Buffer* pBuffer, VkDeviceSize offset, Buffer* pCountBuffer, VkDeviceSize countOffset, uint32_t maxDrawCount, uint32_t stride)
+    {
+        m_streamEncoder.CmdDrawIndexedIndirectCount(pBuffer, offset, pCountBuffer, countOffset, maxDrawCount, stride);
+    }
+
     void CommandBuffer::CmdDispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
     {
         m_streamEncoder.CmdDispatch(groupCountX, groupCountY, groupCountZ);
@@ -355,4 +365,40 @@ namespace vez
     {
         m_streamEncoder.CmdDebugMarkerInsert(_szMarker, _pColor);
     }
+
+    void CommandBuffer::CmdBeginConditionalRendering(Buffer* buffer, VkDeviceSize offset, VkConditionalRenderingFlagsEXT flags)
+    {
+        m_streamEncoder.CmdBeginConditionalRendering(buffer, offset, flags);
+    }
+
+    void CommandBuffer::CmdEndConditionalRendering()
+    {
+        m_streamEncoder.CmdEndConditionalRendering();
+    }
+
+    void CommandBuffer::CmdBeginQuery(VkQueryPool queryPool, uint32_t query, VkQueryControlFlags flags)
+    {
+        m_streamEncoder.CmdBeginQuery(queryPool, query, flags);
+    }
+
+    void CommandBuffer::CmdEndQuery(VkQueryPool queryPool, uint32_t query)
+    {
+        m_streamEncoder.CmdEndQuery(queryPool, query);
+    }
+
+    void CommandBuffer::CmdResetQueryPool(VkQueryPool queryPool, uint32_t firstQuery, uint32_t queryCount)
+    {
+        m_streamEncoder.CmdResetQueryPool(queryPool, firstQuery, queryCount);
+    }
+
+    void CommandBuffer::CmdCopyQueryPoolResults(VkQueryPool queryPool, uint32_t firstQuery, uint32_t queryCount, Buffer* buffer, VkDeviceSize dstOffset, VkDeviceSize stride, VkQueryControlFlags flags)
+    {
+        m_streamEncoder.CmdCopyQueryPoolResults(queryPool, firstQuery, queryCount, buffer, dstOffset, stride, flags);
+    }
+
+    void CommandBuffer::CmdWriteTimestamp(VkPipelineStageFlagBits pipelineStage, VkQueryPool queryPool, uint32_t query)
+    {
+        m_streamEncoder.CmdWriteTimestamp(pipelineStage, queryPool, query);
+    }
+
 }

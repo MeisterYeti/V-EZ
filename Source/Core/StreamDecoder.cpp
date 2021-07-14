@@ -69,6 +69,8 @@ namespace vez
         m_entryPoints[DRAW_INDEXED] = &StreamDecoder::CmdDrawIndexed;
         m_entryPoints[DRAW_INDIRECT] = &StreamDecoder::CmdDrawIndirect;
         m_entryPoints[DRAW_INDEXED_INDIRECT] = &StreamDecoder::CmdDrawIndexedIndirect;
+        m_entryPoints[DRAW_INDIRECT_COUNT] = &StreamDecoder::CmdDrawIndirectCount;
+        m_entryPoints[DRAW_INDEXED_INDIRECT_COUNT] = &StreamDecoder::CmdDrawIndexedIndirectCount;
         m_entryPoints[DISPATCH] = &StreamDecoder::CmdDispatch;
         m_entryPoints[DISPATCH_INDIRECT] = &StreamDecoder::CmdDispatchIndirect;
         m_entryPoints[COPY_BUFFER] = &StreamDecoder::CmdCopyBuffer;
@@ -87,6 +89,13 @@ namespace vez
         m_entryPoints[DEBUG_MARKER_BEGIN] = &StreamDecoder::CmdDebugMarkerBegin;
         m_entryPoints[DEBUG_MARKER_END] = &StreamDecoder::CmdDebugMarkerEnd;
         m_entryPoints[DEBUG_MARKER_INSERT] = &StreamDecoder::CmdDebugMarkerInsert;
+        m_entryPoints[BEGIN_CONDITIONAL_RENDERING] = &StreamDecoder::CmdBeginConditionalRendering;
+        m_entryPoints[END_CONDITIONAL_RENDERING] = &StreamDecoder::CmdEndConditionalRendering;
+        m_entryPoints[BEGIN_QUERY] = &StreamDecoder::CmdBeginQuery;
+        m_entryPoints[END_QUERY] = &StreamDecoder::CmdEndQuery;
+        m_entryPoints[RESET_QUERYPOOL] = &StreamDecoder::CmdResetQueryPool;
+        m_entryPoints[COPY_QUERYPOOL_RESULTS] = &StreamDecoder::CmdCopyQueryPoolResults;
+        m_entryPoints[WRITE_TIMESTAMP] = &StreamDecoder::CmdWriteTimestamp;
     }
 
     void StreamDecoder::Decode(CommandBuffer& commandBuffer, StreamEncoder& encoder)
@@ -452,6 +461,40 @@ namespace vez
 
         // Call native Vulkan function.
         vkCmdDrawIndexedIndirect(commandBuffer.GetHandle(), pBuffer->GetHandle(), offset, drawCount, stride);
+    }
+
+    void StreamDecoder::CmdDrawIndirectCount(CommandBuffer& commandBuffer, MemoryStream& stream)
+    {
+        // Decode command parameters.
+        Buffer* pBuffer;
+        VkDeviceSize offset;
+        Buffer* pCountBuffer;
+        VkDeviceSize countOffset;
+        uint32_t maxDrawCount, stride;
+        stream >> pBuffer >> offset >> pCountBuffer >> countOffset >> maxDrawCount >> stride;
+
+        // TODO: Fallback to extension if Vulkan 1.2 is not available 
+        #ifdef VK_VERSION_1_2
+        // Call native Vulkan function.
+        vkCmdDrawIndirectCount(commandBuffer.GetHandle(), pBuffer->GetHandle(), offset, pCountBuffer->GetHandle(), countOffset, maxDrawCount, stride);
+        #endif
+    }
+
+    void StreamDecoder::CmdDrawIndexedIndirectCount(CommandBuffer& commandBuffer, MemoryStream& stream)
+    {
+        // Decode command parameters.
+        Buffer* pBuffer;
+        VkDeviceSize offset;
+        Buffer* pCountBuffer;
+        VkDeviceSize countOffset;
+        uint32_t maxDrawCount, stride;
+        stream >> pBuffer >> offset >> pCountBuffer >> countOffset >> maxDrawCount >> stride;
+
+        // TODO: Fallback to extension if Vulkan 1.2 is not available 
+        #ifdef VK_VERSION_1_2
+        // Call native Vulkan function.
+        vkCmdDrawIndexedIndirectCount(commandBuffer.GetHandle(), pBuffer->GetHandle(), offset, pCountBuffer->GetHandle(), countOffset, maxDrawCount, stride);
+        #endif
     }
 
     void StreamDecoder::CmdDispatch(CommandBuffer& commandBuffer, MemoryStream& stream)
@@ -831,4 +874,93 @@ namespace vez
         FillMarker(markerInfo, szMarker, pColor);
         pfnCmdDebugMarkerInsert(commandBuffer.GetHandle(), &markerInfo);
     }
+    
+    PFN_vkCmdEndConditionalRenderingEXT pfnCmdEndConditionalRendering = nullptr;
+    PFN_vkCmdBeginConditionalRenderingEXT pfnCmdBeginConditionalRendering = nullptr;
+
+    // Get function pointers for the debug report extensions from the device
+    void SetupConditionalRendering(VkDevice device)
+    {
+        pfnCmdEndConditionalRendering = (PFN_vkCmdEndConditionalRenderingEXT)vkGetDeviceProcAddr(device, "vkCmdEndConditionalRenderingEXT");
+        pfnCmdBeginConditionalRendering = (PFN_vkCmdBeginConditionalRenderingEXT)vkGetDeviceProcAddr(device, "vkCmdBeginConditionalRenderingEXT");
+    }
+
+    void StreamDecoder::CmdBeginConditionalRendering(CommandBuffer& commandBuffer, MemoryStream& stream)
+    {
+        // Decode command parameters.
+        Buffer* pBuffer;
+        VkDeviceSize offset;
+        VkConditionalRenderingFlagsEXT flags;
+        stream >> pBuffer >> offset >> flags;
+
+        VkConditionalRenderingBeginInfoEXT beginInfo;
+        beginInfo.pNext = nullptr;
+        beginInfo.sType = VK_STRUCTURE_TYPE_CONDITIONAL_RENDERING_BEGIN_INFO_EXT;
+        beginInfo.buffer = pBuffer->GetHandle();
+        beginInfo.offset = offset;
+        beginInfo.flags = flags;
+
+        // Call the native Vulkan function.
+        pfnCmdBeginConditionalRendering(commandBuffer.GetHandle(), &beginInfo);
+    }
+
+    void StreamDecoder::CmdEndConditionalRendering(CommandBuffer& commandBuffer, MemoryStream& stream)
+    {
+        // Call the native Vulkan function.
+        pfnCmdEndConditionalRendering(commandBuffer.GetHandle());
+    }
+
+    void StreamDecoder::CmdBeginQuery(CommandBuffer& commandBuffer, MemoryStream& stream)
+    {
+        VkQueryPool queryPool;
+        uint32_t query;
+        VkQueryControlFlags flags;
+        stream >> queryPool >> query >> flags;
+        
+        vkCmdBeginQuery(commandBuffer.GetHandle(), queryPool, query, flags);
+    }
+
+    void StreamDecoder::CmdEndQuery(CommandBuffer& commandBuffer, MemoryStream& stream)
+    {
+        VkQueryPool queryPool;
+        uint32_t query;
+        stream >> queryPool >> query;
+        
+        vkCmdEndQuery(commandBuffer.GetHandle(), queryPool, query);
+    }
+
+    void StreamDecoder::CmdResetQueryPool(CommandBuffer& commandBuffer, MemoryStream& stream)
+    {
+        VkQueryPool queryPool;
+        uint32_t firstQuery;
+        uint32_t queryCount;
+        stream >> queryPool >> firstQuery >> queryCount;
+
+        vkCmdResetQueryPool(commandBuffer.GetHandle(), queryPool, firstQuery, queryCount);
+    }
+
+    void StreamDecoder::CmdCopyQueryPoolResults(CommandBuffer& commandBuffer, MemoryStream& stream)
+    {
+        VkQueryPool queryPool;
+        uint32_t firstQuery;
+        uint32_t queryCount;
+        Buffer* buffer;
+        VkDeviceSize dstOffset;
+        VkDeviceSize stride;
+        VkQueryControlFlags flags;
+        stream >> queryPool >> firstQuery >> queryCount >> buffer >> dstOffset >> stride >> flags;
+
+        vkCmdCopyQueryPoolResults(commandBuffer.GetHandle(), queryPool, firstQuery, queryCount, buffer->GetHandle(), dstOffset, stride, flags);
+    }
+
+    void StreamDecoder::CmdWriteTimestamp(CommandBuffer& commandBuffer, MemoryStream& stream)
+    {
+        VkPipelineStageFlagBits pipelineStage;
+        VkQueryPool queryPool;
+        uint32_t query;
+        stream >> pipelineStage >> queryPool >> query;
+
+        vkCmdWriteTimestamp(commandBuffer.GetHandle(), pipelineStage, queryPool, query);
+    }
+
 }
